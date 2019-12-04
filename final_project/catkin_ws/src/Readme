@@ -1,0 +1,15 @@
+Car Demo 
+
+The simulation with the chevrolet bolt mode. 
+
+Gazebo_radar_plugin
+
+Contains the radar plugin for gazebo 9 
+
+hector_gazebo
+
+Contains the IMU plugin for gazebo 9 
+
+velo2cam_gazebo
+
+Contains the velodyne vlp-16 , HD64 and VLP16 , and necessary models for calibration of cameras 
