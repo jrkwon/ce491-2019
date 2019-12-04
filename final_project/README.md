@@ -1,11 +1,5 @@
 # CE491/691 Final Project
 
-## How to clone
-Go to your home folder and clone this projet. 
-```
-$ cd
-$ git clone https://github.com/jrkwon/ce491
-```
 ## Gazebo version
 We must use Gazebo9. First remove Gazebo7 if you use Ubuntu 16.04.
 
