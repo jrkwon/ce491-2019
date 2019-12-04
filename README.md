@@ -20,7 +20,7 @@ $ git clone https://github.com/jrkwon/ce491-2019.git
 
 ## Contributions
 
-This project template would not be possible without many contributors including Jaerock Kwon, Ahmed, Nikhil, Ninad, Balu, etc with many generous open source projects including car_demo (osrf), CAT Vehicle, dbw_mkz, etc. 
+This project template would not be possible without many contributors including Jaerock Kwon, Ahmed, Nikhil, Ninad, and Balu with many generous open source projects including car_demo (osrf), CAT Vehicle, dbw_mkz, etc. 
  
 ## License
 
