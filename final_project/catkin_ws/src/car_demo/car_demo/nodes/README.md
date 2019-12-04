@@ -1,5 +1,10 @@
 # Joystick Translator
 
+## Install ros-kinetic-joystick-drivers
+
+```
+$ sudo apt install ros-kinetic-joystick-drivers
+```
 ## joystick_translator_joystick
 
 This for running the simulation using the logitech game controller rumblepad 2
