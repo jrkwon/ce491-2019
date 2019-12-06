@@ -38,4 +38,4 @@ IMAGE_DEPTH          = 3
 CROP_X1              = 0
 CROP_Y1              = 380
 CROP_X2              = 800
-CROP_Y2              = 800
+CROP_Y2              = 590
