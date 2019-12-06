@@ -13,7 +13,7 @@ NET_TYPE_RESNET      = 6
 NET_TYPE_CE491       = 7
 
 # file extension
-DATA_EXT             = '.cvs'
+DATA_EXT             = '.csv'
 IMAGE_EXT            = '.jpg'
 
 # training
