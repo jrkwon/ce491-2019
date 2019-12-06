@@ -1,8 +1,9 @@
 name: ros
 channels:
   - menpo
-  - anaconda
   - conda-forge
+  - anaconda
+  - auto
   - defaults
 dependencies:
   - _libgcc_mutex=0.1=main
@@ -17,7 +18,7 @@ dependencies:
   - backports_abc=0.5=py_1
   - bleach=3.1.0=py_0
   - bzip2=1.0.8=h516909a_1
-  - ca-certificates=2019.11.27=0
+  - ca-certificates=2019.11.28=hecc5488_0
   - cairo=1.14.12=h80bd089_1005
   - catkin_pkg=0.4.13=py_0
   - certifi=2019.11.28=py27_0
@@ -101,10 +102,11 @@ dependencies:
   - nbconvert=5.6.0=py27_1
   - nbformat=4.4.0=py_1
   - ncurses=6.1=hf484d3e_1002
+  - netifaces=0.10.9=py27h516909a_1000
   - numpy=1.16.4=py27h95a1406_0
   - numpydoc=0.9.1=py_0
   - opencv=2.4.11=nppy27_0
-  - openssl=1.1.1=h7b6447c_0
+  - openssl=1.1.1d=h516909a_0
   - packaging=19.0=py_0
   - pandoc=2.7.3=0
   - pandocfilters=1.4.2=py_1
@@ -158,6 +160,7 @@ dependencies:
   - six=1.12.0=py27_1000
   - snowballstemmer=1.9.1=py_0
   - sphinx=1.8.5=py27_0
+  - sphinxcontrib=1.0=py27_1
   - sphinxcontrib-websupport=1.1.2=py_0
   - spyder=3.3.6=py27_0
   - spyder-kernels=0.5.2=py27_0
@@ -191,5 +194,5 @@ dependencies:
   - zeromq=4.3.2=he1b5a44_2
   - zlib=1.2.11=h516909a_1006
   - zstd=1.4.0=h3b9ef0a_0
-prefix: /home/ce491/anaconda3/envs/ros
+prefix: /home/jkwon/anaconda3/envs/ros
 
