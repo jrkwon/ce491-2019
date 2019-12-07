@@ -11,9 +11,21 @@ $ sudo apt remove gazebo*
 
 Install Gazebo9.
 ```
-$curl -sSL http://get.gazebosim.org | sh
+$ curl -sSL http://get.gazebosim.org | sh
+$ sudo apt install ros-kinetic-gazebo9-ros 
 ```
+## Joystick (Logitech G920)
 
+### Install ros-kinetic-joystick-drivers
+
+```
+$ sudo apt install ros-kinetic-joystick-drivers
+```
+### Setup Logitech G920
+```
+$ cd catkin_ws
+$ bash src/car_demo/car_demo/nodes/setup_driving_simulator.sh
+```
 
 ## Prereqs
 

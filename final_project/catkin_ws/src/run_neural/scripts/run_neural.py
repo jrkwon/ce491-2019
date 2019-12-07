@@ -51,47 +51,50 @@ class NeuralControl:
         self.image_processed = True
 
 def main():
-    try:
-        if len(sys.argv) != 2:
-            exit('Usage:\n$ rosrun run_neural run_neural.py weight_file_name')
+    if len(sys.argv) != 2:
+        exit('Usage:\n$ rosrun run_neural run_neural.py weight_file_name')
 
-        neural_control = NeuralControl(sys.argv[1])
-        print('\nStart running. Vroom. Vroom. Vroooooom......')
+    # ready for neural network
+    neural_control = NeuralControl(sys.argv[1])
+    
+    # ready for /bolt topic publisher
+    joy_pub = rospy.Publisher('/bolt', Control, queue_size = 10)
+    joy_data = Control()
 
-        while not rospy.is_shutdown():
+    print('\nStart running. Vroom. Vroom. Vroooooom......')
 
-            if neural_control.image_processed is False:
-                continue
+    while not rospy.is_shutdown():
 
-            prediction = neural_control.drive.run(neural_control.image)
-            joy_pub = rospy.Publisher('/bolt', Control, queue_size = 10)
-            rate = rospy.Rate(30)
-            
-            joy_data = Control()
-            
-            # predicted steering angle from an input image
-            joy_data.steer = prediction
+        if neural_control.image_processed is False:
+            continue
+        
+        # predicted steering angle from an input image
+        prediction = neural_control.drive.run(neural_control.image)
+        joy_data.steer = prediction
 
-            #############################
-            ## TODO: you need to change the vehicle speed wisely  
-            ## e.g. not too fast in a curved road and not too slow in a straight road
-            joy_data.throttle = 0.1 # vehicle speed
+        #############################
+        ## TODO: you need to change the vehicle speed wisely  
+        ## e.g. not too fast in a curved road and not too slow in a straight road
+        joy_data.throttle = 0.1 # vehicle speed
 
 
-            ## publish joy_data
-            joy_pub.publish(joy_data)
+        ## publish joy_data
+        joy_pub.publish(joy_data)
 
-            ## print out
-            sys.stdout.write('steer: ' + str(joy_data.steer) +' throttle: ' + str(joy_data.throttle) + '\r')
-            sys.stdout.flush()
+        ## print out
+        sys.stdout.write('steer: ' + str(joy_data.steer) +' throttle: ' + str(joy_data.throttle) + '\r')
+        sys.stdout.flush()
 
-            ## ready for processing a new input image
-            neural_control.image_processed = False
-            neural_control.rate.sleep()
+        ## ready for processing a new input image
+        neural_control.image_processed = False
+        neural_control.rate.sleep()
 
-    except KeyboardInterrupt:
-	   print ('\nShutdown requested. Exiting...')
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+
+    except KeyboardInterrupt:
+        print ('\nShutdown requested. Exiting...')
+        
