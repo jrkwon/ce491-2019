@@ -85,6 +85,26 @@ Open a new terminal and run the following commands.
 ```
 Your data will be saved at `data/your_data_name/year_month_date_time/*.jpg`. All image file names with corresponding steering angle and throttle value will be saved in the same folder.
 
+## Remove bad training images
+
+From the data collection step, you may have many of images that are not necessarily helpful for training. You can delete those images from the data folder. Then, you need to change .csv file accordingly. 
+
+Here is a tool that can rebuild .csv file based on image files in your collected data folder.
+
+Activate `neural_net` environment if you have not done yet.
+
+```
+$ conda activate neural_net
+```
+
+Go to `neural_net` folder. 
+
+```
+(neural_net) $ python rebuild_csv.py ../data/your_data_name/year_month_date_time/
+```
+
+This will recreated .csv file using the same name. The original csv file is saved as the same name with the `.bak` extension.
+
 ## How to train
 
 Activate `neural_net` environment.
