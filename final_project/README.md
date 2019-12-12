@@ -103,7 +103,7 @@ Go to `neural_net` folder.
 (neural_net) $ python rebuild_csv.py ../data/your_data_name/year_month_date_time/
 ```
 
-This will recreated .csv file using the same name. The original csv file is saved as the same name with the `.bak` extension.
+This will recreate .csv file using the same name. The original csv file is saved as the same name with the `.bak` extension.
 
 ## How to train
 
