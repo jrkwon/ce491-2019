@@ -32,7 +32,7 @@ class DriveTest:
         self.data_path = None
         
         self.num_test_samples = 0        
-        self.config = Config()
+        #self.config = Config()
         
         self.net_model = NetModel(model_path)
         self.net_model.load()
@@ -53,7 +53,7 @@ class DriveTest:
             #model_name = model_name.strip('/')
         else:
             model_name = data_path
-        csv_path = data_path + model_name + const.DATA_EXT  # use it for csv file name 
+        csv_path = data_path + model_name + const.DATA_EXT   
         
         self.drive = DriveData(csv_path)
 
@@ -72,7 +72,7 @@ class DriveTest:
         if self.data_path == None:
             raise NameError('data_path must be set.')
             
-        def _generator(samples, batch_size=self.config.batch_size):
+        def _generator(samples, batch_size=Config.config['batch_size']):
 
             num_samples = len(samples)
 
@@ -90,29 +90,33 @@ class DriveTest:
                     for image_name, measurement in batch_samples:
                         image_path = self.data_path + '/' + image_name
                         image = cv2.imread(image_path)
-                        image = cv2.resize(image, (self.config.image_size[0],
-                                                   self.config.image_size[1]))
+                        image = cv2.resize(image, 
+                                           (Config.config['input_image_width'],
+                                            Config.config['input_image_height']))
                         image = self.image_process.process(image)
                         images.append(image)
         
                         steering_angle, throttle = measurement
 
-                        measurements.append(steering_angle*self.config.raw_scale)
+                        measurements.append(
+                            steering_angle*Config.config['steering_angle_scale'])
         
                         
                     X_train = np.array(images)
                     y_train = np.array(measurements)
 
-                    if self.config.net_model_type == const.NET_TYPE_LSTM_FC6 \
-                        or self.config.net_model_type == const.NET_TYPE_LSTM_FC7:
+                    if Config.config['network_type'] == const.NET_TYPE_LSTM_FC6 \
+                        or Config.config['network_type'] == const.NET_TYPE_LSTM_FC7:
                         X_train = np.array(images).reshape(-1, 1, 
-                                                      self.config.image_size[1],
-                                                      self.config.image_size[0],
-                                                      self.config.image_size[2])
-                        y_train = np.array(measurements).reshape(-1,1,1)
+                                             Config.config['input_image_height'],
+                                             Config.config['input_image_width'],
+                                             Config.config['input_image_depth'])
+                        y_train = np.array(measurements).reshape(-1, 1, 1)
 
-                    yield sklearn.utils.shuffle(X_train, y_train)     
-                
+                    if Config.config['data_shuffle'] is True:
+                        yield sklearn.utils.shuffle(X_train, y_train)     
+                    else:
+                        yield X_train, y_train
         self.test_generator = _generator(self.test_data)
         
     
@@ -127,7 +131,7 @@ class DriveTest:
         ## Note: Do not use multiprocessing or more than 1 worker.
         ##       This will genereate threading error!!!
         score = self.net_model.model.evaluate_generator(self.test_generator, 
-                                self.num_test_samples//self.config.batch_size) 
+                                self.num_test_samples//Config.config['batch_size']) 
                                 #workers=1)
         print("\nLoss: ", score)#[0], "Accuracy: ", score[1])
         #print("\nLoss: ", score[0], "rmse: ", score[1])
@@ -140,3 +144,5 @@ class DriveTest:
         self._prepare_data(data_path)
         self._prep_generator()
         self._start_test()
+        Config.config.summary()
+

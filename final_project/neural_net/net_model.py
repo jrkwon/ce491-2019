@@ -14,6 +14,8 @@ import keras.backend as K
 import const
 from config import Config
 
+config = Config()
+
 class NetModel:
     def __init__(self, model_path):
         self.model = None
@@ -21,17 +23,19 @@ class NetModel:
         self.name = model_name.strip('/')
 
         self.model_path = model_path
-        self.config = Config()
+        #self.config = Config()
 
         self._model()
         
     ###########################################################################
     #
     def _model(self):
+       
+        input_shape = (Config.config['input_image_height'],
+                       Config.config['input_image_width'],
+                       Config.config['input_image_depth'])
         
-        input_shape = (const.IMAGE_HEIGHT, const.IMAGE_WIDTH, const.IMAGE_DEPTH)
-
-        if self.config.net_model_type == const.NET_TYPE_CE491:
+        if Config.config['network_type'] == const.NET_TYPE_CE491:
             self.model = Sequential([
                       Lambda(lambda x: x/127.5 - 1.0, input_shape=input_shape),
                       Conv2D(24, (5, 5), strides=(2,2), activation='relu'),
@@ -43,9 +47,9 @@ class NetModel:
                       Dense(100, activation='relu'),
                       Dense(50, activation='relu'),
                       Dense(10, activation='relu'),
-                      Dense(self.config.num_outputs)])
+                      Dense(Config.config['num_outputs'])])
 
-        elif self.config.net_model_type == const.NET_TYPE_JAEROCK:
+        elif Config.config['network_type'] == const.NET_TYPE_JAEROCK:
             self.model = Sequential([
                       Lambda(lambda x: x/127.5 - 1.0, input_shape=input_shape),
                       Conv2D(24, (5, 5), strides=(2,2)),
@@ -57,7 +61,7 @@ class NetModel:
                       Dense(100),
                       Dense(50),
                       Dense(10),
-                      Dense(self.config.num_outputs)])
+                      Dense(Config.config['num_outputs'])])
 
         else:
             print('Neural network type is not defined.')
@@ -70,19 +74,24 @@ class NetModel:
 
     ###########################################################################
     #
-    def mean_square_error(self, y_true, y_pred):
+    def _mean_square_error(self, y_true, y_pred):
         diff = K.abs(y_true - y_pred)
-        if (diff < const.STEERING_TOLERANCE) is True:
+        if (diff < Config.config['steering_angle_tolerance']) is True:
             diff = 0
         return K.square(K.mean(diff))
 
     ###########################################################################
     #
     def _compile(self):
-        self.model.compile(loss=losses.mean_squared_error,
-                  optimizer=optimizers.Adam(), 
-                  metrics=['accuracy', self.mean_square_error])
-
+        if Config.config['steering_angle_tolerance'] == 0.0:
+            self.model.compile(loss=losses.mean_squared_error,
+                      optimizer=optimizers.Adam(), 
+                      metrics=['accuracy'])
+        else:
+            self.model.compile(loss=losses.mean_squared_error,
+                      optimizer=optimizers.Adam(), 
+                      metrics=['accuracy', self._mean_square_error])
+            
 
     ###########################################################################
     #
@@ -90,7 +99,7 @@ class NetModel:
     def save(self):
         
         json_string = self.model.to_json()
-        weight_filename = self.model_path+'_n'+str(self.config.net_model_type)
+        weight_filename = self.model_path + const.CONFIG_YAML
         open(weight_filename+'.json', 'w').write(json_string)
         self.model.save_weights(weight_filename+'.h5', overwrite=True)
     

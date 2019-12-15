@@ -22,24 +22,26 @@ class NetModel:
         self.name = model_name.strip('/')
 
         self.model_path = model_path
-        self.config = Config()
+        #self.config = Config()
 
         self._model()
         self.base_model = None
 
     def _model(self):
-        input_shape = (self.config.image_size[0], self.config.image_size[1], self.config.image_size[2])
+        input_shape = (Config.config['input_image_width'], 
+                       Config.config['input_image_height'], 
+                       Config.config['input_image_depth'])
         self.base_model = ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
         self.x = self.base_model.output
         self.x = Dense(512, activation='relu')(self.x)
         self.x = Dense(256, activation='relu')(self.x)
         self.x = Dense(64, activation='relu')(self.x)
-        self.prediction = Dense(self.config.num_outputs, activation='relu')(self.x)
-        self.model = Model(inputs=base_model.input, outputs=prediction)
+        self.prediction = Dense(Config.config['num_outputs'], activation='relu')(self.x)
+        self.model = Model(inputs=self.base_model.input, outputs=self.prediction)
         
-        for layer in base_model.layers[:44]:
+        for layer in self.base_model.layers[:44]:
             layer.trainable = False
-        for layer in base_model.layers[44:]:
+        for layer in self.base_model.layers[44:]:
             layer.trainable = True
         
         self._compile()
@@ -49,7 +51,7 @@ class NetModel:
 
     def save(self):
         json_string = self.model.to_json()
-        weight_filename = self.model_path+'_n'+str(self.net_model_type)
+        weight_filename = self.model_path + const.CONFIG_YAML
         open(weight_filename+'.json', 'w').write(json_string)
         self.model.save_weights(weight_filename+'.h5', overwrite=True)
 

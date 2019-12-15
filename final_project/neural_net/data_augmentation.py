@@ -9,11 +9,11 @@ Created on Wed May 15 12:12:00 2019
 import cv2
 import numpy as np
 
-from config import Config
+#from config import Config
 
 class DataAugmentation():
     def __init__(self):
-        self.config = Config()
+#        self.config = Config()
         self.bright_limit = (-0.5, 0.15)
         self.shift_range = (40,5)
         self.brightness_multiplier = None

@@ -39,7 +39,7 @@ class DriveTrain:
         self.train_hist = None
         self.drive = None
         
-        self.config = Config() #model_name)
+        #self.config = Config() #model_name)
         
         self.data_path = data_path
         #self.model_name = model_name
@@ -60,7 +60,7 @@ class DriveTrain:
         
         samples = list(zip(self.drive.image_names, self.drive.measurements))
         self.train_data, self.valid_data = train_test_split(samples, 
-                                            test_size=self.config.valid_rate)
+                                   test_size=Config.config['validation_rate'])
         
         self.num_train_samples = len(self.train_data)
         self.num_valid_samples = len(self.valid_data)
@@ -73,11 +73,11 @@ class DriveTrain:
     #
     def _build_model(self, show_summary=True):
 
-        def _generator(samples, batch_size=self.config.batch_size):
+        def _generator(samples, batch_size=Config.config['batch_size']):
             num_samples = len(samples)
             while True: # Loop forever so the generator never terminates
                
-                if self.config.data_shuffle is True:
+                if Config.config['data_shuffle'] is True:
                     samples = sklearn.utils.shuffle(samples)
 
                 for offset in range(0, num_samples, batch_size):
@@ -90,51 +90,54 @@ class DriveTrain:
                         
                         image_path = self.data_path + '/' + image_name
                         image = cv2.imread(image_path)
-                        image = cv2.resize(image, (self.config.image_size[0],
-                                                   self.config.image_size[1]))
+                        image = cv2.resize(image, 
+                                           (Config.config['input_image_width'],
+                                            Config.config['input_image_height']))
                         image = self.image_process.process(image)
                         images.append(image)
         
                         steering_angle, throttle = measurement
                         
-                        if abs(steering_angle) < self.config.jitter_tolerance:
+                        if abs(steering_angle) < Config.config['steering_angle_jitter_tolerance']:
                             steering_angle = 0
                         
-                        measurements.append(steering_angle*self.config.raw_scale)
+                        measurements.append(steering_angle*Config.config['steering_angle_scale'])
                         
-                        if self.config.aug_flip is True:    
+                        if Config.config['data_aug_flip'] is True:    
                             # Flipping the image
                             flip_image, flip_steering = self.data_aug.flipping(image, steering_angle)
                             images.append(flip_image)
-                            measurements.append(flip_steering*self.config.raw_scale)
+                            measurements.append(flip_steering*Config.config['steering_angle_scale'])
     
-                        if self.config.aug_bright is True:    
+                        if Config.config['data_aug_bright'] is True:    
                             # Changing the brightness of image
-                            if steering_angle > self.config.jitter_tolerance or \
-                                steering_angle < -self.config.jitter_tolerance:
+                            if steering_angle > Config.config['steering_angle_jitter_tolerance'] or \
+                                steering_angle < -Config.config['steering_angle_jitter_tolerance']:
                                 bright_image = self.data_aug.brightness(image)
                                 images.append(bright_image)
-                                measurements.append(steering_angle*self.config.raw_scale)
+                                measurements.append(steering_angle*Config.config['steering_angle_scale'])
     
-                        if self.config.aug_shift is True:    
+                        if Config.config['data_aug_shift'] is True:    
                             # Shifting the image
                             shift_image, shift_steering = self.data_aug.shift(image, steering_angle)
                             images.append(shift_image)
-                            measurements.append(shift_steering*self.config.raw_scale)
+                            measurements.append(shift_steering*Config.config['steering_angle_scale'])
 
                     X_train = np.array(images)
                     y_train = np.array(measurements)
 
-                    if self.config.net_model_type == const.NET_TYPE_LSTM_FC6 or self.config.net_model_type == const.NET_TYPE_LSTM_FC7:
-                        X_train = np.array(images).reshape(-1, 1, self.config.image_size[1],
-                                                                  self.config.image_size[0],
-                                                                  self.config.image_size[2])
+                    if Config.config['network_type'] == const.NET_TYPE_LSTM_FC6 \
+                        or Config.config['network_type'] == const.NET_TYPE_LSTM_FC7:
+                        X_train = np.array(images).reshape(-1, 1, 
+                                          Config.config['input_image_height'],
+                                          Config.config['input_image_width'],
+                                          Config.config['input_image_depth'])
                         y_train = np.array(measurements).reshape(-1,1,1)
                     
-                    if self.config.data_shuffle is True:
+                    if Config.config['data_shuffle'] is True:
                         yield sklearn.utils.shuffle(X_train, y_train)
                     else:
-                        yield (X_train, y_train)
+                        yield X_train, y_train
         
         self.train_generator = _generator(self.train_data)
         self.valid_generator = _generator(self.valid_data)
@@ -155,7 +158,7 @@ class DriveTrain:
         
         # checkpoint
         callbacks = []
-        weight_filename = self.net_model.name+'_n'+str(self.config.net_model_type)+'_ckpt'
+        weight_filename = self.net_model.name + const.CONFIG_YAML + '_ckpt'
         checkpoint = ModelCheckpoint(weight_filename+'.h5',
                                      monitor='val_loss', 
                                      verbose=1, save_best_only=True, mode='min')
@@ -168,10 +171,10 @@ class DriveTrain:
         
         self.train_hist = self.net_model.model.fit_generator(
                 self.train_generator, 
-                steps_per_epoch=self.num_train_samples//self.config.batch_size, 
-                epochs=self.config.num_epochs, 
+                steps_per_epoch=self.num_train_samples//Config.config['batch_size'], 
+                epochs=Config.config['num_epochs'], 
                 validation_data=self.valid_generator,
-                validation_steps=self.num_valid_samples//self.config.batch_size,
+                validation_steps=self.num_valid_samples//Config.config['batch_size'],
                 verbose=1, callbacks=callbacks)
     
 
@@ -199,4 +202,4 @@ class DriveTrain:
         self._start_training()
         self.net_model.save()
         self._plot_training_history()
-        self.config.summary()
+        Config.config.summary()

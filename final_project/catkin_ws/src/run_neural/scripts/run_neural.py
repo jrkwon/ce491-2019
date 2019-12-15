@@ -34,24 +34,26 @@ class NeuralControl:
         rospy.Subscriber('/bolt/front_camera/image_raw', Image, self.controller_cb)
         self.image = None
         self.image_processed = False
-        self.config = Config()
+        #self.config = Config()
         self.braking = False
 
     def controller_cb(self, image): 
         img = self.ic.imgmsg_to_opencv(image)
-        cropped = img[const.CROP_Y1:const.CROP_Y2,
-                      const.CROP_X1:const.CROP_X2]
+        cropped = img[Config.config['image_crop_y1']:Config.config['image_crop_y2'],
+                      Config.config['image_crop_x1']:Config.config['image_crop_x2']]
                       
-        img = cv2.resize(cropped,(const.IMAGE_WIDTH, const.IMAGE_HEIGHT))
+        img = cv2.resize(cropped, (Config.config['input_image_width'],
+                                   Config.config['input_image_height']))
                                   
         self.image = self.image_process.process(img)
 
         ## this is for CNN-LSTM net models
-        if self.config.net_model_type == const.NET_TYPE_LSTM_FC6 \
-                or self.config.net_model_type == const.NET_TYPE_LSTM_FC7:
-            self.image = np.array(self.image).reshape(1, const.IMAGE_HEIGHT,
-                                                         const.IMAGE_WIDTH,
-                                                         const.IMAGE_DEPTH)
+        if Config.config['net_model_type'] == const.NET_TYPE_LSTM_FC6 \
+                or Config.config['net_model_type'] == const.NET_TYPE_LSTM_FC7:
+            self.image = np.array(self.image).reshape(1, 
+                                 Config.config['input_image_height'],
+                                 Config.config['input_image_width'],
+                                 Config.config['input_image_depth'])
         self.image_processed = True
         
     def timer_cb(self):
