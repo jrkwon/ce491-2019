@@ -2,9 +2,9 @@
 # constant definition
 
 # config file name
-# - If you want to change it, make your own copy as test_case1.yaml
+# - If you want to change it, make your own copy like test_case1.yaml
 # - 'name' will be postfixed to the neural network weight file name
-CONFIG_YAML          = 'config'
+CONFIG_YAML          = 'config_default'
 
 # network model type
 NET_TYPE_NIKHIL      = 0
