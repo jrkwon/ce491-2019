@@ -76,7 +76,9 @@ class DriveTrain:
         def _generator(samples, batch_size=self.config.batch_size):
             num_samples = len(samples)
             while True: # Loop forever so the generator never terminates
-                samples = sklearn.utils.shuffle(samples)
+               
+                if self.config.data_shuffle is True:
+                    samples = sklearn.utils.shuffle(samples)
 
                 for offset in range(0, num_samples, batch_size):
                     batch_samples = samples[offset:offset+batch_size]
@@ -95,34 +97,30 @@ class DriveTrain:
         
                         steering_angle, throttle = measurement
                         
-                        #if abs(steering_angle) < self.config.jitter_tolerance:
-                        #    steering_angle = 0
+                        if abs(steering_angle) < self.config.jitter_tolerance:
+                            steering_angle = 0
                         
-                        measurements.append(steering_angle)
-                        #measurements.append(steering_angle*self.config.raw_scale)
+                        measurements.append(steering_angle*self.config.raw_scale)
                         
-                        ###-----------------------Flipping the image-----------------------###
-                        flip_image, flip_steering = self.data_aug.flipping(image, steering_angle)
-                        images.append(flip_image)
-                        measurements.append(flip_steering)
-
-                        '''
-                        # add the flipped image of the original
-                        images.append(cv2.flip(image,1))
-                        #measurement = (steering_angle*-1.0, measurement[1]) 
-                        measurements.append(steering_angle*-1.0)
-                        #measurements.append(steering_angle*self.config.raw_scale*-1.0)
-                        '''
-                        ###----------------Changing the brightness of image----------------###
-                        if steering_angle > 0.01 or steering_angle < -0.015:
-                            bright_image = self.data_aug.brightness(image)
-                            images.append(bright_image)
-                            measurements.append(steering_angle)
-
-                        ###-----------------------Shifting the image-----------------------###
-                        shift_image, shift_steering = self.data_aug.shift(image, steering_angle)
-                        images.append(shift_image)
-                        measurements.append(shift_steering)
+                        if self.config.aug_flip is True:    
+                            # Flipping the image
+                            flip_image, flip_steering = self.data_aug.flipping(image, steering_angle)
+                            images.append(flip_image)
+                            measurements.append(flip_steering*self.config.raw_scale)
+    
+                        if self.config.aug_bright is True:    
+                            # Changing the brightness of image
+                            if steering_angle > self.config.jitter_tolerance or \
+                                steering_angle < -self.config.jitter_tolerance:
+                                bright_image = self.data_aug.brightness(image)
+                                images.append(bright_image)
+                                measurements.append(steering_angle*self.config.raw_scale)
+    
+                        if self.config.aug_shift is True:    
+                            # Shifting the image
+                            shift_image, shift_steering = self.data_aug.shift(image, steering_angle)
+                            images.append(shift_image)
+                            measurements.append(shift_steering*self.config.raw_scale)
 
                     X_train = np.array(images)
                     y_train = np.array(measurements)
@@ -133,7 +131,10 @@ class DriveTrain:
                                                                   self.config.image_size[2])
                         y_train = np.array(measurements).reshape(-1,1,1)
                     
-                    yield sklearn.utils.shuffle(X_train, y_train)
+                    if self.config.data_shuffle is True:
+                        yield sklearn.utils.shuffle(X_train, y_train)
+                    else:
+                        yield (X_train, y_train)
         
         self.train_generator = _generator(self.train_data)
         self.valid_generator = _generator(self.valid_data)
@@ -161,7 +162,7 @@ class DriveTrain:
         callbacks.append(checkpoint)
         
         # early stopping
-        earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=0, 
+        earlystop = EarlyStopping(monitor='val_loss', min_delta=0, patience=3, 
                                   verbose=1, mode='min')
         callbacks.append(earlystop)
         
@@ -188,6 +189,7 @@ class DriveTrain:
         plt.legend(['training set', 'validatation set'], loc='upper right')
         plt.show()
         
+        
     ###########################################################################
     #
     def train(self, show_summary=True):
@@ -197,3 +199,4 @@ class DriveTrain:
         self._start_training()
         self.net_model.save()
         self._plot_training_history()
+        self.config.summary()

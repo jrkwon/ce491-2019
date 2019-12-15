@@ -6,10 +6,7 @@ Created on Wed May 15 12:12:00 2019
 @author: ninad
 """
 
-import os
 import cv2
-import pandas
-import sys
 import numpy as np
 
 from config import Config

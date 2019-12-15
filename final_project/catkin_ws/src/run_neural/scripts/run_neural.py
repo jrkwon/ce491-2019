@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-import datetime
-import os
+import threading 
 import cv2
 import time
 import rospy
@@ -20,6 +19,10 @@ from drive_run import DriveRun
 from config import Config
 from image_process import ImageProcess
 
+SHARP_TURN_MIN = 0.3
+BRAKE_APPLY_SEC = 1.5
+THROTTLE_DEFAULT = 0.2
+THROTTLE_SHARP_TURN = 0.05
 
 class NeuralControl:
     def __init__(self, weight_file_name):
@@ -32,6 +35,7 @@ class NeuralControl:
         self.image = None
         self.image_processed = False
         self.config = Config()
+        self.braking = False
 
     def controller_cb(self, image): 
         img = self.ic.imgmsg_to_opencv(image)
@@ -49,19 +53,22 @@ class NeuralControl:
                                                          const.IMAGE_WIDTH,
                                                          const.IMAGE_DEPTH)
         self.image_processed = True
-
-def main():
-    if len(sys.argv) != 2:
-        exit('Usage:\n$ rosrun run_neural run_neural.py weight_file_name')
+        
+    def timer_cb(self):
+        self.braking = False
+      
+        
+def main(weight_file_name):
 
     # ready for neural network
-    neural_control = NeuralControl(sys.argv[1])
+    neural_control = NeuralControl(weight_file_name)
     
     # ready for /bolt topic publisher
     joy_pub = rospy.Publisher('/bolt', Control, queue_size = 10)
     joy_data = Control()
 
     print('\nStart running. Vroom. Vroom. Vroooooom......')
+    print('steer \tthrt: \tbrake')
 
     while not rospy.is_shutdown():
 
@@ -75,14 +82,27 @@ def main():
         #############################
         ## TODO: you need to change the vehicle speed wisely  
         ## e.g. not too fast in a curved road and not too slow in a straight road
-        joy_data.throttle = 0.1 # vehicle speed
-
-
+        
+        # if brake is not already applied and sharp turn
+        if neural_control.braking is False: 
+            if abs(joy_data.steer) > SHARP_TURN_MIN: 
+                joy_data.throttle = THROTTLE_SHARP_TURN
+                joy_data.brake = 0.5
+                neural_control.braking = True
+                timer = threading.Timer(BRAKE_APPLY_SEC, neural_control.timer_cb) 
+                timer.start()
+            else:
+                joy_data.throttle = THROTTLE_DEFAULT
+                joy_data.brake = 0
+        
+            
         ## publish joy_data
         joy_pub.publish(joy_data)
 
         ## print out
-        sys.stdout.write('steer: ' + str(joy_data.steer) +' throttle: ' + str(joy_data.throttle) + '\r')
+        cur_output = '{0:.3f} \t{1:.2f} \t{2:.2f}\r'.format(prediction[0][0], 
+                      joy_data.throttle, joy_data.brake)
+        sys.stdout.write(cur_output)
         sys.stdout.flush()
 
         ## ready for processing a new input image
@@ -93,7 +113,10 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        if len(sys.argv) != 2:
+            exit('Usage:\n$ rosrun run_neural run_neural.py weight_file_name')
+
+        main(sys.argv[1])
 
     except KeyboardInterrupt:
         print ('\nShutdown requested. Exiting...')

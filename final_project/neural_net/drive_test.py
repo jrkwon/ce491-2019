@@ -13,6 +13,7 @@ import sklearn
 from progressbar import ProgressBar
 
 #import resnet
+import const
 from net_model import NetModel
 from drive_data import DriveData
 from config import Config
@@ -43,11 +44,17 @@ class DriveTest:
     #
     def _prepare_data(self, data_path):
         
-        self.data_path = data_path
+        if data_path[-1] == '/':
+            data_path = data_path[:-1]
+
+        loc_slash = data_path.rfind('/')
+        if loc_slash != -1: # there is '/' in the data path
+            model_name = data_path[loc_slash:] # get folder name
+            #model_name = model_name.strip('/')
+        else:
+            model_name = data_path
+        csv_path = data_path + model_name + const.DATA_EXT  # use it for csv file name 
         
-        folder_name = data_path[data_path.rfind('/'):] # get folder name
-        folder_name = folder_name.strip('/')
-        csv_path = data_path + '/' + folder_name + '.csv' # use it for csv file name 
         self.drive = DriveData(csv_path)
 
         self.drive.read()
@@ -81,8 +88,7 @@ class DriveTest:
                     images = []
                     measurements = []
                     for image_name, measurement in batch_samples:
-                        image_path = self.data_path + '/' + image_name + \
-                                     self.config.fname_ext
+                        image_path = self.data_path + '/' + image_name
                         image = cv2.imread(image_path)
                         image = cv2.resize(image, (self.config.image_size[0],
                                                    self.config.image_size[1]))
@@ -90,19 +96,19 @@ class DriveTest:
                         images.append(image)
         
                         steering_angle, throttle = measurement
-                        #angles.append(float(steering_angle))
-                        #measurements.append(steering_angle)
-                        #measurements.append(steering_angle*self.config.raw_scale)
-                        measurements.append(steering_angle)
+
+                        measurements.append(steering_angle*self.config.raw_scale)
         
                         
                     X_train = np.array(images)
                     y_train = np.array(measurements)
 
-                    if self.config.typeofModel == 4 or self.config.typeofModel == 5:
-                        X_train = np.array(images).reshape(-1, 1, self.config.image_size[1],
-                                                                  self.config.image_size[0],
-                                                                  self.config.image_size[2])
+                    if self.config.net_model_type == const.NET_TYPE_LSTM_FC6 \
+                        or self.config.net_model_type == const.NET_TYPE_LSTM_FC7:
+                        X_train = np.array(images).reshape(-1, 1, 
+                                                      self.config.image_size[1],
+                                                      self.config.image_size[0],
+                                                      self.config.image_size[2])
                         y_train = np.array(measurements).reshape(-1,1,1)
 
                     yield sklearn.utils.shuffle(X_train, y_train)     

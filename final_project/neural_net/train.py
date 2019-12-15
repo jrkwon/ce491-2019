@@ -3,25 +3,22 @@
 
 import sys
 from drive_train import DriveTrain
-    
-#'../mir_torcs_drive_data/2017-05-31-20-49-09' 
 
 ###############################################################################
-#       
-def main():
+#
+def main(data_folder_name):
+    drive_train = DriveTrain(data_folder_name)
+    drive_train.train(show_summary=False)
+
+
+###############################################################################
+#
+if __name__ == '__main__':
     try:
         if (len(sys.argv) != 2):
-            print('Give a folder name of drive data.')
-            return
-        
-        drive_train = DriveTrain(sys.argv[1])
-        drive_train.train(show_summary=False)    
+            exit('Usage:\n$ python train.py data_path')
+
+        main(sys.argv[1])
 
     except KeyboardInterrupt:
         print ('\nShutdown requested. Exiting...')
-       
-
-###############################################################################
-#       
-if __name__ == '__main__':
-    main()

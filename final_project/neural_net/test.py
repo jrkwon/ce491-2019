@@ -11,24 +11,22 @@ import sys
 
 from drive_test import DriveTest
     
-#'../mir_torcs_drive_data/2017-05-31-20-49-09' 
 
 ###############################################################################
 #       
-def main():
-    try:
-        if (len(sys.argv) != 3):
-            print('Use model_name folder_name_to_drive_data.')
-            return
-        
-        drive_test = DriveTest(sys.argv[1])
-        drive_test.test(sys.argv[2])    
-
-    except KeyboardInterrupt:
-        print ('\nShutdown requested. Exiting...')
+def main(trained_model_name, data_path):
+    drive_test = DriveTest(trained_model_name)
+    drive_test.test(data_path)    
        
 
 ###############################################################################
 #       
 if __name__ == '__main__':
-    main()
+    try:
+        if (len(sys.argv) != 3):
+            exit('Usage:\n$ python test.py model_name data_path')
+
+        main(sys.argv[1], sys.argv[2])
+
+    except KeyboardInterrupt:
+        print ('\nShutdown requested. Exiting...')

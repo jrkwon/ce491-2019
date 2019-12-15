@@ -26,5 +26,5 @@ class DriveRun:
     def run(self, image):
         npimg = np.expand_dims(image, axis=0)
         measurements = self.net_model.model.predict(npimg)
-        #measurements = measurements / self.config.raw_scale
+        measurements = measurements / self.config.raw_scale
         return measurements
