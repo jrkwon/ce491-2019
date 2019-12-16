@@ -17,7 +17,7 @@ class Config:
     @staticmethod
     def summary():
         print('========== neural_net configuration ==========')
-        print('+ name: ' + const.CONFIG_YAML + '.yaml')
+        print('+ config name: ' + const.CONFIG_YAML + '.yaml')
         print('+ training ----------')
         print('-- network_type: ' + str(Config.config['network_type']))
         print('-- validation_rate: ' + str(Config.config['validation_rate']))

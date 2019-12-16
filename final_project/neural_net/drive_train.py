@@ -158,7 +158,7 @@ class DriveTrain:
         
         # checkpoint
         callbacks = []
-        weight_filename = self.net_model.name + const.CONFIG_YAML + '_ckpt'
+        weight_filename = self.net_model.name + '_' + const.CONFIG_YAML + '_ckpt'
         checkpoint = ModelCheckpoint(weight_filename+'.h5',
                                      monitor='val_loss', 
                                      verbose=1, save_best_only=True, mode='min')
@@ -202,4 +202,4 @@ class DriveTrain:
         self._start_training()
         self.net_model.save()
         self._plot_training_history()
-        Config.config.summary()
+        Config.summary()

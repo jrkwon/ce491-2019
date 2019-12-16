@@ -51,7 +51,7 @@ class NetModel:
 
     def save(self):
         json_string = self.model.to_json()
-        weight_filename = self.model_path + const.CONFIG_YAML
+        weight_filename = self.model_path + '_' + const.CONFIG_YAML
         open(weight_filename+'.json', 'w').write(json_string)
         self.model.save_weights(weight_filename+'.h5', overwrite=True)
 

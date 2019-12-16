@@ -144,5 +144,5 @@ class DriveTest:
         self._prepare_data(data_path)
         self._prep_generator()
         self._start_test()
-        Config.config.summary()
+        Config.summary()
 
