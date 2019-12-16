@@ -74,11 +74,11 @@ class NetModel:
 
     ###########################################################################
     #
-    def _mean_square_error(self, y_true, y_pred):
+    def _mean_squared_error(self, y_true, y_pred):
         diff = K.abs(y_true - y_pred)
         if (diff < Config.config['steering_angle_tolerance']) is True:
             diff = 0
-        return K.square(K.mean(diff))
+        return K.mean(K.square(diff))
 
     ###########################################################################
     #
@@ -90,7 +90,7 @@ class NetModel:
         else:
             self.model.compile(loss=losses.mean_squared_error,
                       optimizer=optimizers.Adam(), 
-                      metrics=['accuracy', self._mean_square_error])
+                      metrics=['accuracy', self._mean_squared_error])
             
 
     ###########################################################################
