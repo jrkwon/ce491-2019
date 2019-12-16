@@ -20,3 +20,4 @@ NET_TYPE_JAEROCK     = 8
 # file extension
 DATA_EXT             = '.csv'
 IMAGE_EXT            = '.jpg'
+LOG_EXT              = '_log.csv'

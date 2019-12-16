@@ -71,7 +71,7 @@ class DriveLog:
     def run(self):
         
         self._prepare_data()
-        fname = self.data_path + '_log.csv'
+        fname = self.data_path + const.LOG_EXT
         
         file = open(fname, 'w')
 
