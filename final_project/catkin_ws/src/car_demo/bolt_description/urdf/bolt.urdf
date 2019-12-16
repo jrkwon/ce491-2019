@@ -553,12 +553,12 @@
       <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
     </inertial>
   </link>
-  <joint name="radar_joint" type="fixed">
+  <!-- joint name="radar_joint" type="fixed">
     <axis xyz="0 0 0" />
     <origin xyz="0 -3.4 1" rpy="0 0 -1.57"/>
     <parent link="chassis"/>
     <child link="rad_link"/>
-  </joint>
+  </joint -->
   
   <!-- plugin##-->
   <gazebo>
@@ -1164,7 +1164,7 @@
       <visualize>1</visualize>
     </sensor>
   </gazebo>
-  <gazebo reference="rad_link">
+  <!-- gazebo reference="rad_link">
         <sensor name="logical_camera" type="logical_camera">
           <logical_camera>
             <near>0</near>
@@ -1176,10 +1176,10 @@
           <always_on>true</always_on>
           <update_rate>10</update_rate>
         </sensor>
-  </gazebo> 
+  </gazebo --> 
 
 <!-- ######################################################## --> 
-  <gazebo>
+  <!-- gazebo>
       <visualize>true</visualize>
       <update_rate>10</update_rate>
       <plugin name="mode_c_radar" filename="libModeCRadarPlugin.so">
@@ -1194,6 +1194,6 @@
           </noise>
         </position_noise>
       </plugin>
-  </gazebo>
+  </gazebo -->
 
 </robot>
