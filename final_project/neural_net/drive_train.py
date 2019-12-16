@@ -27,11 +27,11 @@ class DriveTrain:
 
         loc_slash = data_path.rfind('/')
         if loc_slash != -1: # there is '/' in the data path
-            model_name = data_path[loc_slash:] # get folder name
+            model_name = data_path[loc_slash + 1:] # get folder name
             #model_name = model_name.strip('/')
         else:
             model_name = data_path
-        csv_path = data_path + model_name + const.DATA_EXT  # use it for csv file name 
+        csv_path = data_path + '/' + model_name + const.DATA_EXT  # use it for csv file name 
         
         self.csv_path = csv_path
         self.train_generator = None

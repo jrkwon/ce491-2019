@@ -26,10 +26,21 @@ class DriveTest:
     ###########################################################################
     # model_path = 'path_to_pretrained_model_name' excluding '.h5' or 'json'
     # data_path = 'path_to_drive_data'  e.g. ../data/2017-09-22-10-12-34-56'
-    def __init__(self, model_path):
+    def __init__(self, model_path, data_path):
+        if data_path[-1] == '/':
+            data_path = data_path[:-1]
+
+        loc_slash = data_path.rfind('/')
+        if loc_slash != -1: # there is '/' in the data path
+            model_name = data_path[loc_slash+1:] # get folder name
+            #model_name = model_name.strip('/')
+        else:
+            model_name = data_path
+        csv_path = data_path + '/' + model_name + const.DATA_EXT   
+        
+        self.drive = DriveData(csv_path)
         
         self.test_generator = None
-        self.data_path = None
         
         self.num_test_samples = 0        
         #self.config = Config()
@@ -37,32 +48,20 @@ class DriveTest:
         self.net_model = NetModel(model_path)
         self.net_model.load()
         
-        self.image_process = ImageProcess()
-
+        #self.image_process = ImageProcess()
+        self.data_path = data_path
 
     ###########################################################################
     #
-    def _prepare_data(self, data_path):
+    def _prepare_data(self):
         
-        if data_path[-1] == '/':
-            data_path = data_path[:-1]
-
-        loc_slash = data_path.rfind('/')
-        if loc_slash != -1: # there is '/' in the data path
-            model_name = data_path[loc_slash:] # get folder name
-            #model_name = model_name.strip('/')
-        else:
-            model_name = data_path
-        csv_path = data_path + model_name + const.DATA_EXT   
-        
-        self.drive = DriveData(csv_path)
 
         self.drive.read()
     
         self.test_data = list(zip(self.drive.image_names, self.drive.measurements))
         self.num_test_samples = len(self.test_data)
         
-        print('\nTest samples: ', self.num_test_samples)
+        print('Test samples: {0}'.format(self.num_test_samples))
     
       
     ###########################################################################
@@ -127,21 +126,21 @@ class DriveTest:
         if (self.test_generator == None):
             raise NameError('Generators are not ready.')
         
-        print("\nEvaluating the model with test data sets ...")
+        print('Evaluating the model with test data sets ...')
         ## Note: Do not use multiprocessing or more than 1 worker.
         ##       This will genereate threading error!!!
         score = self.net_model.model.evaluate_generator(self.test_generator, 
                                 self.num_test_samples//Config.config['batch_size']) 
                                 #workers=1)
-        print("\nLoss: ", score)#[0], "Accuracy: ", score[1])
+        print('Loss: {0}'.format(score)) #[0], "Accuracy: ", score[1])
         #print("\nLoss: ", score[0], "rmse: ", score[1])
         
     
 
    ###########################################################################
     #
-    def test(self, data_path):
-        self._prepare_data(data_path)
+    def test(self):
+        self._prepare_data()
         self._prep_generator()
         self._start_test()
         Config.summary()

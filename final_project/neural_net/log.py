@@ -1,22 +1,20 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python2
 # -*- coding: utf-8 -*-
 """
-Created on Sat Sep 23 13:49:23 2017
+Created on Sun Dec 15 22:15:46 2019
 
 @author: jaerock
 """
 
-
 import sys
 
-from drive_test import DriveTest
-    
+from drive_log import DriveLog
 
 ###############################################################################
 #       
-def test(trained_model_name, data_path):
-    drive_test = DriveTest(trained_model_name, data_path)
-    drive_test.test()    
+def log(weight_name, data_folder_name):
+    drive_log = DriveLog(weight_name, data_folder_name) 
+    drive_log.run() # data folder path to test
        
 
 ###############################################################################
@@ -24,9 +22,9 @@ def test(trained_model_name, data_path):
 if __name__ == '__main__':
     try:
         if (len(sys.argv) != 3):
-            exit('Usage:\n$ python test.py model_name data_path')
-
-        test(sys.argv[1], sys.argv[2])
+            exit('Usage:\n$ python log.py weight_name data_folder_name')
+        
+        log(sys.argv[1], sys.argv[2])
 
     except KeyboardInterrupt:
         print ('\nShutdown requested. Exiting...')
