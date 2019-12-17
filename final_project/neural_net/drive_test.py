@@ -105,7 +105,8 @@ class DriveTest:
                     y_train = np.array(measurements)
 
                     if Config.config['network_type'] == const.NET_TYPE_LSTM_FC6 \
-                        or Config.config['network_type'] == const.NET_TYPE_LSTM_FC7:
+                        or Config.config['network_type'] == const.NET_TYPE_LSTM_FC7 \
+                        or Config.config['network_type'] == const.NET_TYPE_JR_LSTM:
                         X_train = np.array(images).reshape(-1, 1, 
                                              Config.config['input_image_height'],
                                              Config.config['input_image_width'],

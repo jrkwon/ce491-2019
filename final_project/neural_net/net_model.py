@@ -26,15 +26,15 @@ class NetModel:
         #self.config = Config()
 
         self._model()
-        
+
     ###########################################################################
     #
     def _model(self):
-       
+
         input_shape = (Config.config['input_image_height'],
                        Config.config['input_image_width'],
                        Config.config['input_image_depth'])
-        
+
         if Config.config['network_type'] == const.NET_TYPE_CE491:
             self.model = Sequential([
                       Lambda(lambda x: x/127.5 - 1.0, input_shape=input_shape),
@@ -63,6 +63,30 @@ class NetModel:
                       Dense(10),
                       Dense(Config.config['num_outputs'])])
 
+        elif Config.config['network_type'] == const.NET_TYPE_JR_LSTM:
+
+            from keras.layers.recurrent import LSTM
+            from keras.layers.wrappers import TimeDistributed
+
+            # redefine input_shape to add one more dims
+            input_shape = (None, Config.config['input_image_height'],
+                                 Config.config['input_image_width'],
+                                 Config.config['input_image_depth'])
+            self.model = Sequential([
+                          TimeDistributed(Lambda(lambda x: x/127.5 - 1.0), input_shape=input_shape),
+                          TimeDistributed(Conv2D(24, (5, 5), strides=(2,2))),
+                          TimeDistributed(Conv2D(36, (5, 5), strides=(2,2))),
+                          TimeDistributed(Conv2D(48, (5, 5), strides=(2,2))),
+                          TimeDistributed(Conv2D(64, (3, 3))),
+                          TimeDistributed(Conv2D(64, (3, 3))),
+                          TimeDistributed(Flatten()),
+                          Dense(100),
+                          LSTM(return_sequences=True, units=10),
+                          Dense(50),
+                          Dense(10),
+                          Dropout(0.25),
+                          Dense(Config.config['num_outputs'])])
+
         else:
             print('Neural network type is not defined.')
             return
@@ -70,7 +94,7 @@ class NetModel:
         self.model.summary()
         self._compile()
 
-        
+
 
     ###########################################################################
     #
@@ -85,38 +109,38 @@ class NetModel:
     def _compile(self):
         if Config.config['steering_angle_tolerance'] == 0.0:
             self.model.compile(loss=losses.mean_squared_error,
-                      optimizer=optimizers.Adam(), 
+                      optimizer=optimizers.Adam(),
                       metrics=['accuracy'])
         else:
             self.model.compile(loss=losses.mean_squared_error,
-                      optimizer=optimizers.Adam(), 
+                      optimizer=optimizers.Adam(),
                       metrics=['accuracy', self._mean_squared_error])
-            
+
 
     ###########################################################################
     #
     # save model
     def save(self):
-        
+
         json_string = self.model.to_json()
         weight_filename = self.model_path + '_' + const.CONFIG_YAML
         open(weight_filename+'.json', 'w').write(json_string)
         self.model.save_weights(weight_filename+'.h5', overwrite=True)
-    
-    
+
+
     ###########################################################################
     # model_path = '../data/2007-09-22-12-12-12.
     def load(self):
-        
+
         from keras.models import model_from_json
-        
+
         self.model = model_from_json(open(self.model_path+'.json').read())
         self.model.load_weights(self.model_path+'.h5')
         self._compile()
-        
+
     ###########################################################################
     #
     # show summary
     def summary(self):
         self.model.summary()
-        
+
