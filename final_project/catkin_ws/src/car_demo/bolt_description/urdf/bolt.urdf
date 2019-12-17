@@ -533,7 +533,7 @@
     <parent link="chassis"/>
     <child link="velodyne_link" />
   </joint> 
-  <link name="rad_link">
+  <!-- link name="rad_link">
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
@@ -552,7 +552,7 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
     </inertial>
-  </link>
+  </link -->
   <!-- joint name="radar_joint" type="fixed">
     <axis xyz="0 0 0" />
     <origin xyz="0 -3.4 1" rpy="0 0 -1.57"/>

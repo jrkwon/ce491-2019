@@ -10,8 +10,10 @@ from std_msgs.msg import Int32
 from sensor_msgs.msg import Image
 
 import sys
+import os
 
 sys.path.append('../neural_net/')
+os.chdir('../neural_net/')
 
 import const
 from image_converter import ImageConverter
@@ -48,8 +50,8 @@ class NeuralControl:
         self.image = self.image_process.process(img)
 
         ## this is for CNN-LSTM net models
-        if Config.config['net_model_type'] == const.NET_TYPE_LSTM_FC6 \
-                or Config.config['net_model_type'] == const.NET_TYPE_LSTM_FC7:
+        if Config.config['network_type'] == const.NET_TYPE_LSTM_FC6 \
+                or Config.config['network_type'] == const.NET_TYPE_LSTM_FC7:
             self.image = np.array(self.image).reshape(1, 
                                  Config.config['input_image_height'],
                                  Config.config['input_image_width'],
