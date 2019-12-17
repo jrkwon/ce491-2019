@@ -22,7 +22,7 @@ steering_angle_jitter_tolerance: 0.01
 
 # driving simulator
 steering_angle_max: 450
-steering_angle_tolerance: 0.015 # around 7.5 degree
+steering_angle_tolerance: 0.0 # 0.015 # around 7.5 degree
 
 # data augmentation
 data_aug_flip: True

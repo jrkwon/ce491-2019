@@ -92,8 +92,13 @@ class DriveLog:
             
             #print(image_name, measurement[0], predict[0][0],\ 
             #                  abs(measurement[0]-predict[0][0]))
-            log = image_name+','+str(measurement[0])+','+str(predict[0][0])\
-                            +','+str(abs(measurement[0]-predict[0][0]))
+            if Config.config['lstm'] is True:
+                log = image_name+','+str(measurement[0])+','+str(predict[0][0][0])\
+                                +','+str(abs(measurement[0]-predict[0][0][0]))
+            else:
+                log = image_name+','+str(measurement[0])+','+str(predict[0][0])\
+                                +','+str(abs(measurement[0]-predict[0][0]))
+
             file.write(log+'\n')
         
         file.close()
