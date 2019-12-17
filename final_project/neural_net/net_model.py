@@ -81,7 +81,7 @@ class NetModel:
                           TimeDistributed(Conv2D(64, (3, 3))),
                           TimeDistributed(Flatten()),
                           Dense(100),
-                          LSTM(return_sequences=True, units=20),
+                          LSTM(return_sequences=True, units=10),
                           Dense(50),
                           Dense(10),
                           Dropout(0.25),
