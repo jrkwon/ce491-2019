@@ -21,6 +21,7 @@ from drive_run import DriveRun
 from config import Config
 from image_process import ImageProcess
 
+
 SHARP_TURN_MIN = 0.3
 BRAKE_APPLY_SEC = 1.5
 THROTTLE_DEFAULT = 0.2
@@ -33,13 +34,13 @@ class NeuralControl:
         self.image_process = ImageProcess()
         self.rate = rospy.Rate(30)
         self.drive= DriveRun(weight_file_name)
-        rospy.Subscriber('/bolt/front_camera/image_raw', Image, self.controller_cb)
+        rospy.Subscriber('/bolt/front_camera/image_raw', Image, self._controller_cb)
         self.image = None
         self.image_processed = False
         #self.config = Config()
         self.braking = False
 
-    def controller_cb(self, image): 
+    def _controller_cb(self, image): 
         img = self.ic.imgmsg_to_opencv(image)
         cropped = img[Config.config['image_crop_y1']:Config.config['image_crop_y2'],
                       Config.config['image_crop_x1']:Config.config['image_crop_x2']]
