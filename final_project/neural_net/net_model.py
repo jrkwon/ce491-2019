@@ -96,25 +96,28 @@ class NetModel:
 
 
 
-    ###########################################################################
-    #
-    def _mean_squared_error(self, y_true, y_pred):
-        diff = K.abs(y_true - y_pred)
-        if (diff < Config.config['steering_angle_tolerance']) is True:
-            diff = 0
-        return K.mean(K.square(diff))
+    # ###########################################################################
+    # #
+    # def _mean_squared_error(self, y_true, y_pred):
+    #     diff = K.abs(y_true - y_pred)
+    #     if (diff < Config.config['steering_angle_tolerance']) is True:
+    #         diff = 0
+    #     return K.mean(K.square(diff))
 
     ###########################################################################
     #
     def _compile(self):
-        if Config.config['steering_angle_tolerance'] == 0.0:
-            self.model.compile(loss=losses.mean_squared_error,
-                      optimizer=optimizers.Adam(),
-                      metrics=['accuracy'])
-        else:
-            self.model.compile(loss=losses.mean_squared_error,
-                      optimizer=optimizers.Adam(),
-                      metrics=['accuracy', self._mean_squared_error])
+        self.model.compile(loss=losses.mean_squared_error,
+                    optimizer=optimizers.Adam(),
+                    metrics=['accuracy'])
+        # if Config.config['steering_angle_tolerance'] == 0.0:
+        #     self.model.compile(loss=losses.mean_squared_error,
+        #               optimizer=optimizers.Adam(),
+        #               metrics=['accuracy'])
+        # else:
+        #     self.model.compile(loss=losses.mean_squared_error,
+        #               optimizer=optimizers.Adam(),
+        #               metrics=['accuracy', self._mean_squared_error])
 
 
     ###########################################################################
