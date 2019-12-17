@@ -3,10 +3,12 @@
 
 version: 0.5 
 
+# network defintion
 network_type: 8
+lstm: False
 
 # training
-data_shuffle: True
+# data_shuffle: True
 validation_rate: 0.3
 num_epochs: 20
 batch_size: 16

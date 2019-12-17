@@ -2,9 +2,9 @@
 # constant definition
 
 # config file name
-# - If you want to change it, make your own copy like test_case1.yaml
-# - 'name' will be postfixed to the neural network weight file name
-CONFIG_YAML          = 'config_jr_lstm'   #'config_default'
+# - If you want to change it, make your own copy like config_<meaningful>.yaml
+# - This config name will be postfixed to the neural network weight file name
+CONFIG_YAML          = 'config_jaerock'   
 
 # network model type
 NET_TYPE_NIKHIL      = 0
