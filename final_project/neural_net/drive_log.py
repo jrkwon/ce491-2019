@@ -50,6 +50,7 @@ class DriveLog:
         
         self.net_model = NetModel(model_path)
         self.net_model.load()
+        self.model_path = model_path
         
         self.image_process = ImageProcess()
 
@@ -71,7 +72,8 @@ class DriveLog:
     def run(self):
         
         self._prepare_data()
-        fname = self.data_path + const.LOG_EXT
+        #fname = self.data_path + const.LOG_EXT
+        fname = self.model_path + const.LOG_EXT # use model name to save log
         
         file = open(fname, 'w')
 
