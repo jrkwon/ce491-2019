@@ -3,10 +3,12 @@
 
 version: 0.5 
 
+# network defintion
 network_type: 9
+lstm: True
 
 # training
-data_shuffle: False   # In CNN-LSTM network type
+# data_shuffle: False   # In CNN-LSTM network type
 validation_rate: 0.3
 num_epochs: 20
 batch_size: 16

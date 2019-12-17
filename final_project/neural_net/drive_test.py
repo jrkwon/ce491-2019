@@ -104,16 +104,14 @@ class DriveTest:
                     X_train = np.array(images)
                     y_train = np.array(measurements)
 
-                    if Config.config['network_type'] == const.NET_TYPE_LSTM_FC6 \
-                        or Config.config['network_type'] == const.NET_TYPE_LSTM_FC7 \
-                        or Config.config['network_type'] == const.NET_TYPE_JR_LSTM:
+                    if Config.config['lstm'] is True:
                         X_train = np.array(images).reshape(-1, 1, 
                                              Config.config['input_image_height'],
                                              Config.config['input_image_width'],
                                              Config.config['input_image_depth'])
                         y_train = np.array(measurements).reshape(-1, 1, 1)
 
-                    if Config.config['data_shuffle'] is True:
+                    if Config.config['lstm'] is False:
                         yield sklearn.utils.shuffle(X_train, y_train)     
                     else:
                         yield X_train, y_train

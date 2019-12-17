@@ -51,8 +51,7 @@ class NeuralControl:
         self.image = self.image_process.process(img)
 
         ## this is for CNN-LSTM net models
-        if Config.config['network_type'] == const.NET_TYPE_LSTM_FC6 \
-                or Config.config['network_type'] == const.NET_TYPE_LSTM_FC7:
+        if Config.config['lstm'] is True:
             self.image = np.array(self.image).reshape(1, 
                                  Config.config['input_image_height'],
                                  Config.config['input_image_width'],
@@ -105,11 +104,16 @@ def main(weight_file_name):
         joy_pub.publish(joy_data)
 
         ## print out
-        cur_output = '{0:.3f} \t{1:.2f} \t{2:.2f}\r'.format(prediction[0][0], 
-                      joy_data.throttle, joy_data.brake)
+        if Config.config['lstm'] is True:
+            cur_output = '{0:.3f} \t{1:.2f} \t{2:.2f}\r'.format(prediction[0][0][0], 
+                          joy_data.throttle, joy_data.brake)
+        else:
+            cur_output = '{0:.3f} \t{1:.2f} \t{2:.2f}\r'.format(prediction[0][0], 
+                          joy_data.throttle, joy_data.brake)
+
         sys.stdout.write(cur_output)
         sys.stdout.flush()
-
+        
         ## ready for processing a new input image
         neural_control.image_processed = False
         neural_control.rate.sleep()
