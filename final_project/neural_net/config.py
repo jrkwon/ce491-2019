@@ -4,11 +4,14 @@
 ###############################################################################
 #
 
+import os
 import yaml
 import const
 
+
 class Config:
-    with open(const.CONFIG_YAML + '.yaml') as file:
+    yaml_name = os.getcwd() + '/../neural_net/' + const.CONFIG_YAML + '.yaml'
+    with open(yaml_name) as file:
         config = yaml.full_load(file)
 
     def __init__(self): # model_name):

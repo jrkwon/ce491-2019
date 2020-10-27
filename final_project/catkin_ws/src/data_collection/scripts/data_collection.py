@@ -15,6 +15,7 @@ from bolt_msgs.msg import Control
 sys.path.append('../neural_net/')
 from image_converter import ImageConverter
 import const
+from config import Config
 
 vehicle_steer = 0
 vehicle_vel = 0
@@ -48,8 +49,8 @@ def recorder(data):
     img = ic.imgmsg_to_opencv(data)
 
     # crop
-    cropped = img[const.CROP_Y1:const.CROP_Y2,
-                  const.CROP_X1:const.CROP_X2]
+    cropped = img[Config.config['image_crop_y1']:Config.config['image_crop_y2'],
+                  Config.config['image_crop_x1']:Config.config['image_crop_x2']]
 
     time_stamp = datetime.datetime.now().strftime("%Y-%m-%d-%H-%M-%S-%f")
     file_full_path = str(path) + str(time_stamp) + const.IMAGE_EXT
