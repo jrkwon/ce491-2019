@@ -48,7 +48,7 @@ class DriveTest:
         self.net_model = NetModel(model_path)
         self.net_model.load()
         
-        #self.image_process = ImageProcess()
+        self.image_process = ImageProcess()
         self.data_path = data_path
 
     ###########################################################################
