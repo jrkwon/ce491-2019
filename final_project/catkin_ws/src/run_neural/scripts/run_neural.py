@@ -21,6 +21,13 @@ from drive_run import DriveRun
 from config import Config
 from image_process import ImageProcess
 
+import tensorflow as tf  # This should be TF2 from the conda env `tf2`
+
+sys.path.append('../../../latcom/')
+os.chdir('../../../latcom/')
+
+from preprocess import preprocess_opened_image
+
 
 SHARP_TURN_MIN = 0.3
 BRAKE_APPLY_SEC = 1.5
@@ -60,7 +67,29 @@ class NeuralControl:
         
     def timer_cb(self):
         self.braking = False
-      
+
+
+class NeuralControlLatency:
+    def __init__(self, model_path):
+        self.model_path = model_path  # H5 model path
+        rospy.init_node('run_neural')
+        self.ic = ImageConverter()
+        self.rate = rospy.Rate(30)
+        self.model = tf.keras.models.load_model(self.model_path)
+        rospy.Subscriber('/bolt/front_camera/image_raw', Image, self._controller_cb)
+        self.image = None
+        self.image_processed = False
+        self.braking = False
+
+    def _controller_cb(self, imgmsg):
+        img = self.ic.imgmsg_to_opencv(imgmsg)
+        img = preprocess_opened_image(img)
+        self.image = np.expand_dims(img, axis=0)
+        self.image_processed = True
+
+    def predict(self, preprocessed_img):
+        return self.model.predict(preprocessed_img)
+
         
 def main(weight_file_name):
 
@@ -80,7 +109,10 @@ def main(weight_file_name):
             continue
         
         # predicted steering angle from an input image
-        prediction = neural_control.drive.run(neural_control.image)
+        if isinstance(neural_control, NeuralControl):
+            prediction = neural_control.drive.run(neural_control.image)
+        elif isinstance(neural_control, NeuralControlLatency):
+            prediction = neural_control.predict(neural_control.image)
         joy_data.steer = prediction
 
         #############################
