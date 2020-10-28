@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import threading 
-import cv2
+#import cv2
 import time
 import rospy
 import numpy as np
@@ -27,6 +27,12 @@ sys.path.append('../../../latcom/')
 os.chdir('../../../latcom/')
 
 from preprocess import preprocess_opened_image
+
+
+# Model path
+MODEL_PATH = '/home/ce491/Downloads/test_model.h5'
+
+
 
 
 SHARP_TURN_MIN = 0.3
@@ -94,7 +100,7 @@ class NeuralControlLatency:
 def main(weight_file_name):
 
     # ready for neural network
-    neural_control = NeuralControl(weight_file_name)
+    neural_control = NeuralControlLatency(MODEL_PATH)
     
     # ready for /bolt topic publisher
     joy_pub = rospy.Publisher('/bolt', Control, queue_size = 10)
