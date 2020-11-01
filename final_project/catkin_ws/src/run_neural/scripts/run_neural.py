@@ -13,6 +13,7 @@ import sys
 import os
 
 sys.path.append('../neural_net/')
+# print(os.getcwd())
 os.chdir('../neural_net/')
 
 import const
@@ -21,18 +22,33 @@ from drive_run import DriveRun
 from config import Config
 from image_process import ImageProcess
 
-import tensorflow as tf  # This should be TF2 from the conda env `tf2`
+import tensorflow as tf
+from keras import losses, optimizers
 
 sys.path.append('../../../latcom/')
 os.chdir('../../../latcom/')
 
-from preprocess import preprocess_opened_image
+# from preprocess import preprocess_opened_image
 
 
 # Model path
-MODEL_PATH = '/home/ce491/Downloads/test_model.h5'
+CONFIG_PATH = '/home/sanjyot/test_model_config_only.json'
+WEIGHT_PATH = '/home/sanjyot/test_model_weights_only.h5'
+
+height, width = (210, 800)
+final_shape = (40, 80)
+crop_y = 30
+rightside_width_cut = 700
+crop_window = tf.constant([crop_y, 0, height - crop_y, rightside_width_cut], dtype=tf.int32)
 
 
+def preprocess_opened_image(img, crop_window, final_shape):
+    # img = tf.io.decode_and_crop_jpeg(img, crop_window=crop_window)  # Decode and crop
+    # img = tfa.image.gaussian_filter2d(img, filter_shape=(3, 3))  # Blur
+    img = tf.image.resize(img, size=final_shape)  # Resize
+    img = tf.divide(img, tf.constant(255.0))  # Normalize
+    # img = tf.image.rgb_to_yuv(img)  # Convert to YUV space
+    return img
 
 
 SHARP_TURN_MIN = 0.3
@@ -76,31 +92,45 @@ class NeuralControl:
 
 
 class NeuralControlLatency:
-    def __init__(self, model_path):
-        self.model_path = model_path  # H5 model path
+    def __init__(self, config_path, weight_path):
+        self.config_path = config_path
+        self.weight_path = weight_path
         rospy.init_node('run_neural')
         self.ic = ImageConverter()
         self.rate = rospy.Rate(30)
-        self.model = tf.keras.models.load_model(self.model_path)
+        self.model = self.load_model()
+        # self.sess = tf.Session()
         rospy.Subscriber('/bolt/front_camera/image_raw', Image, self._controller_cb)
         self.image = None
         self.image_processed = False
         self.braking = False
 
+    def load_model(self):
+        with open(self.config_path) as json_file:
+            json_config = json_file.read()
+        model = tf.keras.models.model_from_json(json_config)
+
+        model.load_weights(self.weight_path)
+        model.compile(loss=losses.mean_squared_error,
+                   optimizer='adam',
+                   metrics=['mse'])
+        return model
+
     def _controller_cb(self, imgmsg):
         img = self.ic.imgmsg_to_opencv(imgmsg)
-        img = preprocess_opened_image(img)
-        self.image = np.expand_dims(img, axis=0)
+        img = preprocess_opened_image(img, crop_window=crop_window, final_shape=final_shape)
+        img = tf.expand_dims(img, axis=0)
+        self.image = img
         self.image_processed = True
 
     def predict(self, preprocessed_img):
-        return self.model.predict(preprocessed_img)
+        return self.model.predict(preprocessed_img, batch_size=1, steps=1)
 
         
 def main(weight_file_name):
 
     # ready for neural network
-    neural_control = NeuralControlLatency(MODEL_PATH)
+    neural_control = NeuralControlLatency(CONFIG_PATH, WEIGHT_PATH)
     
     # ready for /bolt topic publisher
     joy_pub = rospy.Publisher('/bolt', Control, queue_size = 10)
