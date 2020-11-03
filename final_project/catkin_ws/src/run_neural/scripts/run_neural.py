@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import threading 
-#import cv2
+import cv2
 import time
 import rospy
 import numpy as np
@@ -11,6 +11,7 @@ from sensor_msgs.msg import Image
 
 import sys
 import os
+import imageio
 
 sys.path.append('../neural_net/')
 # print(os.getcwd())
@@ -32,22 +33,26 @@ os.chdir('../../../latcom/')
 
 
 # Model path
-CONFIG_PATH = '/home/sanjyot/test_model_config_only.json'
-WEIGHT_PATH = '/home/sanjyot/test_model_weights_only.h5'
+CONFIG_PATH = '/home/sanjyot/bimi/robotics/av/working/latcom/models/model1_config_only.json'
+WEIGHT_PATH = '/home/sanjyot/bimi/robotics/av/working/latcom/models/model1_weights_only.h5'
 
+# TODO: Put these variables in config
 height, width = (210, 800)
 final_shape = (40, 80)
 crop_y = 30
 rightside_width_cut = 700
+
+final_width, final_height = final_shape
 crop_window = tf.constant([crop_y, 0, height - crop_y, rightside_width_cut], dtype=tf.int32)
 
 
-def preprocess_opened_image(img, crop_window, final_shape):
-    # img = tf.io.decode_and_crop_jpeg(img, crop_window=crop_window)  # Decode and crop
-    # img = tfa.image.gaussian_filter2d(img, filter_shape=(3, 3))  # Blur
-    img = tf.image.resize(img, size=final_shape)  # Resize
-    img = tf.divide(img, tf.constant(255.0))  # Normalize
-    # img = tf.image.rgb_to_yuv(img)  # Convert to YUV space
+def preprocess_opened_image(img):
+    img = img[380:590, 0:800]
+    img = img[crop_y:, :rightside_width_cut]
+    img = cv2.resize(img, (final_height, final_width))
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    img = np.array(img) / 255.0
+    img = np.expand_dims(img, axis=0)
     return img
 
 
@@ -99,7 +104,7 @@ class NeuralControlLatency:
         self.ic = ImageConverter()
         self.rate = rospy.Rate(30)
         self.model = self.load_model()
-        # self.sess = tf.Session()
+        self.config = Config()
         rospy.Subscriber('/bolt/front_camera/image_raw', Image, self._controller_cb)
         self.image = None
         self.image_processed = False
@@ -111,20 +116,22 @@ class NeuralControlLatency:
         model = tf.keras.models.model_from_json(json_config)
 
         model.load_weights(self.weight_path)
-        model.compile(loss=losses.mean_squared_error,
-                   optimizer='adam',
-                   metrics=['mse'])
+        model.compile(
+            loss=losses.mean_squared_error,
+            optimizer='adam',
+            metrics=['mse']
+        )
         return model
 
     def _controller_cb(self, imgmsg):
         img = self.ic.imgmsg_to_opencv(imgmsg)
-        img = preprocess_opened_image(img, crop_window=crop_window, final_shape=final_shape)
-        img = tf.expand_dims(img, axis=0)
-        self.image = img
+        self.image = preprocess_opened_image(img)
+        # print(self.image.shape)
+        imageio.imwrite('sample_img.jpg', self.image[0])
         self.image_processed = True
 
     def predict(self, preprocessed_img):
-        return self.model.predict(preprocessed_img, batch_size=1, steps=1)
+        return self.model.predict(preprocessed_img, batch_size=1)
 
         
 def main(weight_file_name):
@@ -150,6 +157,9 @@ def main(weight_file_name):
         elif isinstance(neural_control, NeuralControlLatency):
             prediction = neural_control.predict(neural_control.image)
         joy_data.steer = prediction
+
+        print('Steer: ', prediction)
+        # print(joy_data)
 
         #############################
         ## TODO: you need to change the vehicle speed wisely  
@@ -187,7 +197,6 @@ def main(weight_file_name):
         neural_control.rate.sleep()
 
 
-
 if __name__ == "__main__":
     try:
         if len(sys.argv) != 2:
@@ -197,4 +206,3 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         print ('\nShutdown requested. Exiting...')
-        
