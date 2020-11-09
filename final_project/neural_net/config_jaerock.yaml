@@ -40,3 +40,18 @@ image_crop_x1: 0
 image_crop_y1: 380
 image_crop_x2: 800
 image_crop_y2: 590
+
+# Latency compensation parameters
+lc_model_config: '/home/sanjyot/bimi/robotics/av/working/latcom/models/model1_config_only.json'
+lc_model_weight: '/home/sanjyot/bimi/robotics/av/working/latcom/models/model1_weights_only.h5'
+lc_init_img_height: 210
+lc_init_img_width: 800
+lc_fin_img_height: 40
+lc_fin_img_width: 80
+lc_crop_y_start: 30
+lc_rightside_width_cut: 700
+lc_ros_rate: 30
+lc_sharp_turn_min_speed: 0.12
+lc_brake_apply_sec: 1.5
+lc_ throttle_default: 0.2
+lc_throttle_sharp_turn: 0.05
