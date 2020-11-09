@@ -140,9 +140,7 @@ class Preprocessor(object):
 class Manager(object):
 
     def __init__(self, config_path, weight_path, mode):
-        self.config_path = config_path
-        self.weight_path = weight_path
-        self.model = Model(self.config_path, self.weight_path)
+        self.model = Model(config_path, weight_path)
         self.throttle = Throttle()
         self.processor = Preprocessor()
 
@@ -165,20 +163,19 @@ class Manager(object):
 
 
 def main(mode='no_latency'):
-    # Initialize trained model
+    # Initialize manager with trained model
     manager = Manager(CONFIG_PATH, WEIGHT_PATH, mode)
-
+    
     joy_data = Control()
-
     steer = 0.0  # Initial steering value
 
     while not rospy.is_shutdown():
 
-        # If processor gets ready, update steer value
+        # If processor is ready with image, update steer value
         if manager.processor.is_ready:
             steer = manager.model.predict(manager.processor.image)
 
-        # Throttle strategy
+        # Get throttle value
         throttle = manager.throttle.get_throttle()
 
         # Publish joy_data
@@ -186,9 +183,8 @@ def main(mode='no_latency'):
         joy_data.throttle = throttle
         manager.publish(joy_data)
 
-        print('Steer: {:03f} | Throttle: {:02f} | Brake: {:02f}'.format(np.squeeze(joy_data.steer),
-                                                                        joy_data.throttle,
-                                                                        joy_data.brake))
+        print('Steer: {:03f} | Throttle: {:02f}'.format(np.squeeze(joy_data.steer),
+                                                        joy_data.throttle))
         manager.rate.sleep()
 
 
