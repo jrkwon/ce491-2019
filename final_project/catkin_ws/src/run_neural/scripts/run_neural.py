@@ -139,7 +139,7 @@ class Preprocessor(object):
 
 class Manager(object):
 
-    def __init__(self, config_path, weight_path):
+    def __init__(self, config_path, weight_path, mode):
         self.config_path = config_path
         self.weight_path = weight_path
         self.model = Model(self.config_path, self.weight_path)
@@ -147,42 +147,53 @@ class Manager(object):
         self.processor = Preprocessor()
 
         rospy.init_node('run_neural')
-        rospy.Subscriber('/bolt/front_camera/image_raw', Image, self._callback)
+        if mode == 'no_latency':
+            print('No latency mode.')
+            rospy.Subscriber('/bolt/front_camera/image_raw', Image, self._callback, queue_size=1)
+        elif mode == 'latency':
+            print('Latency mode.')
+            rospy.Subscriber('/delayed_img', Image, self._callback, queue_size=1)
+
         self.publisher = rospy.Publisher('/bolt', Control, queue_size=10)
         self.rate = rospy.Rate(ros_rate)
 
     def _callback(self, imgmsg):
-        time.sleep(0.1)  # Latency simulated here
         self.processor.process(imgmsg)
 
     def publish(self, data):
         self.publisher.publish(data)
 
 
-def main():
+def main(mode='no_latency'):
     # Initialize trained model
-    manager = Manager(CONFIG_PATH, WEIGHT_PATH)
+    manager = Manager(CONFIG_PATH, WEIGHT_PATH, mode)
 
     joy_data = Control()
 
+    steer = 0.0  # Initial steering value
+
     while not rospy.is_shutdown():
+
+        # If processor gets ready, update steer value
         if manager.processor.is_ready:
-        
-            # Predicted steering angle from an input image
-            # print('shape: ', manager.processor.image.shape)
-            joy_data.steer = manager.model.predict(manager.processor.image)
+            steer = manager.model.predict(manager.processor.image)
 
-            # Throttle strategy
-            joy_data.throttle = manager.throttle.get_throttle()
+        # Throttle strategy
+        throttle = manager.throttle.get_throttle()
 
-            # Publish joy_data
-            manager.publish(joy_data)
+        # Publish joy_data
+        joy_data.steer = steer
+        joy_data.throttle = throttle
+        manager.publish(joy_data)
 
-            print('Steer: {:03f} | Throttle: {:02f} | Brake: {:02f}'.format(np.squeeze(joy_data.steer),
-                                                                            joy_data.throttle,
-                                                                            joy_data.brake))
+        print('Steer: {:03f} | Throttle: {:02f} | Brake: {:02f}'.format(np.squeeze(joy_data.steer),
+                                                                        joy_data.throttle,
+                                                                        joy_data.brake))
         manager.rate.sleep()
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) >= 2:
+        main(sys.argv[1])
+    else:
+        main()
