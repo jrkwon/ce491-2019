@@ -55,6 +55,7 @@ lc_sharp_turn_min_speed: 0.12
 lc_brake_apply_sec: 1.5
 lc_ throttle_default: 0.2
 lc_throttle_sharp_turn: 0.05
+lc_latency_ms: 500
 
 # Throttle params
 lc_init_steps: 400
