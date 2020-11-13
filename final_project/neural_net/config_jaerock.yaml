@@ -42,8 +42,8 @@ image_crop_x2: 800
 image_crop_y2: 590
 
 # Latency compensation parameters
-lc_model_config: '/home/sanjyot/bimi/robotics/av/working/latcom/models/model1_config_only.json'
-lc_model_weight: '/home/sanjyot/bimi/robotics/av/working/latcom/models/model1_weights_only.h5'
+lc_model_config: '/home/sanjyot/bimi/robotics/av/working/latcom/models/model2_config_only.json'
+lc_model_weight: '/home/sanjyot/bimi/robotics/av/working/latcom/models/model2_weights_only.h5'
 lc_init_img_height: 210
 lc_init_img_width: 800
 lc_fin_img_height: 40
