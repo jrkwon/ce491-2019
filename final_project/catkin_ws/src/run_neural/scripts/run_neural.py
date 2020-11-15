@@ -41,7 +41,7 @@ gazebo_crop_y2 = conf['image_crop_y2']
 init_steps = conf['lc_init_steps']
 accl_steps = conf['lc_accl_steps']
 neut_steps = conf['lc_neut_steps']
-SHARP_TURN_MIN = conf['lc_sharp_turn_min_speed']
+curve_threshold = conf['lc_curve_threshold']
 BRAKE_APPLY_SEC = conf['lc_brake_apply_sec']
 THROTTLE_DEFAULT = conf['lc_ throttle_default']
 THROTTLE_SHARP_TURN = conf['lc_throttle_sharp_turn']
@@ -54,33 +54,74 @@ crop_x2 = rightside_width_cut
 
 
 class Throttle(object):
+    straight_accl_steps = 130
+    straight_neut_steps = 150
+    curved_accl_steps = 130
+    curved_neut_steps = 150
+    brake_steps = 40
+    straight_throttle = 0.2
+    curved_throttle = 0.2
+    neut_throttle = 0.0
 
     def __init__(self):
-        self.buffer = [THROTTLE_DEFAULT] * init_steps
-        self.last_status_accl = False
+        self.straight_buffer = [self.straight_throttle] * init_steps
+        self.curved_buffer = []
+
+        self.straight_status_accl = False
+        self.curved_status_accl = False
+        self.last_status_straight = False
+        self.brake = False
 
     @staticmethod
-    def _get_accl_throttle_buffer():
-        return [THROTTLE_DEFAULT] * accl_steps
+    def _get_buffer(throttle, steps):
+        return [throttle] * steps
 
-    @staticmethod
-    def _get_neut_throttle_buffer():
-        return [0.0] * neut_steps
-
-    def _refill_buffer(self):
-        if not self.last_status_accl:
-            self.buffer = self._get_accl_throttle_buffer()
-            self.last_status_accl = True
+    def _refill_straight_buffer(self):
+        if not self.straight_status_accl:
+            self.straight_buffer = self._get_buffer(self.straight_throttle, self.straight_accl_steps)
+            self.straight_status_accl = True
         else:
-            self.buffer = self._get_neut_throttle_buffer()
-            self.last_status_accl = False
+            self.straight_buffer = self._get_buffer(self.neut_throttle, self.curved_accl_steps)
+            self.straight_status_accl = False
 
-    def get_throttle(self):
+    def get_straight_throttle(self):
+        self.last_status_straight = True
+        self.brake = False
         try:
-            return self.buffer.pop()
+            return self.straight_buffer.pop(), self.brake
         except IndexError:
-            self._refill_buffer()
-            return self.buffer.pop()
+            self._refill_straight_buffer()
+            return self.straight_buffer.pop(), self.brake
+
+    def _refill_curved_buffer(self):
+        if not self.brake and self.last_status_straight:
+            self.curved_buffer = [0.0] * self.brake_steps
+            self.brake = True
+            return
+
+        if not self.curved_status_accl:
+            self.curved_buffer = self._get_buffer(self.curved_throttle, self.curved_accl_steps)
+            self.curved_status_accl = True
+            self.brake = False
+            self.last_status_straight = False
+        else:
+            self.curved_buffer = self._get_buffer(self.neut_throttle, self.curved_accl_steps)
+            self.curved_status_accl = False
+            self.brake = False
+            self.last_status_straight = False
+
+    def get_curved_throttle(self):
+        try:
+            return self.curved_buffer.pop(), self.brake
+        except IndexError:
+            self._refill_curved_buffer()
+            return self.curved_buffer.pop(), self.brake
+
+    def get_throttle(self, steer):
+        if abs(steer) >= curve_threshold:
+            return self.get_curved_throttle()
+        else:
+            return self.get_straight_throttle()
 
 
 class Model(object):
@@ -176,15 +217,20 @@ def main(mode='no_latency'):
             steer = manager.model.predict(manager.processor.image)
 
         # Get throttle value
-        throttle = manager.throttle.get_throttle()
+        throttle, is_brake = manager.throttle.get_throttle(steer)
 
         # Publish joy_data
         joy_data.steer = steer
-        joy_data.throttle = throttle
+        if is_brake:
+            joy_data.brake = 0.75
+        else:
+            joy_data.throttle = throttle
+            joy_data.brake = 0.0
         manager.publish(joy_data)
 
-        print('Steer: {:03f} | Throttle: {:02f}'.format(np.squeeze(joy_data.steer),
-                                                        joy_data.throttle))
+        print('Throttle: {} | Brake {} | Steer: {}'.format(format(round(joy_data.throttle, 2), '.2f'),
+                                                           format(round(joy_data.brake, 2), '.1f'),
+                                                           format(round(np.squeeze(joy_data.steer), 3), '.3f')))
         manager.rate.sleep()
 
 
