@@ -38,13 +38,13 @@ gazebo_crop_x2 = conf['image_crop_x2']
 gazebo_crop_y2 = conf['image_crop_y2']
 
 # Throttle params
-init_steps = conf['lc_init_steps']
-accl_steps = conf['lc_accl_steps']
-neut_steps = conf['lc_neut_steps']
-curve_threshold = conf['lc_curve_threshold']
-BRAKE_APPLY_SEC = conf['lc_brake_apply_sec']
-THROTTLE_DEFAULT = conf['lc_ throttle_default']
-THROTTLE_SHARP_TURN = conf['lc_throttle_sharp_turn']
+# init_steps = conf['lc_init_steps']
+# accl_steps = conf['lc_accl_steps']
+# neut_steps = conf['lc_neut_steps']
+# curve_threshold = conf['lc_curve_threshold']
+# BRAKE_APPLY_SEC = conf['lc_brake_apply_sec']
+# THROTTLE_DEFAULT = conf['lc_ throttle_default']
+# THROTTLE_SHARP_TURN = conf['lc_throttle_sharp_turn']
 
 # Calculate final crop
 crop_y1 = gazebo_crop_y1 + crop_y_neural_net
@@ -54,17 +54,20 @@ crop_x2 = rightside_width_cut
 
 
 class Throttle(object):
-    straight_accl_steps = 130
-    straight_neut_steps = 150
-    curved_accl_steps = 130
-    curved_neut_steps = 150
-    brake_steps = 40
-    straight_throttle = 0.2
+    init_steps = 100
+    curve_threshold = 0.115
+    straight_accl_steps = 80
+    straight_neut_steps = 40
+    curved_accl_steps = 80
+    curved_neut_steps = 40
+    brake_steps = 70
+    straight_throttle = 0.3
     curved_throttle = 0.2
     neut_throttle = 0.0
+    soft_brake_val = 0.35
 
     def __init__(self):
-        self.straight_buffer = [self.straight_throttle] * init_steps
+        self.straight_buffer = [self.straight_throttle] * self.init_steps
         self.curved_buffer = []
 
         self.straight_status_accl = False
@@ -87,11 +90,12 @@ class Throttle(object):
     def get_straight_throttle(self):
         self.last_status_straight = True
         self.brake = False
+        self.curved_buffer = []
         try:
-            return self.straight_buffer.pop(), self.brake
+            return self.straight_buffer.pop(), self.brake, self.soft_brake_val
         except IndexError:
             self._refill_straight_buffer()
-            return self.straight_buffer.pop(), self.brake
+            return self.straight_buffer.pop(), self.brake, self.soft_brake_val
 
     def _refill_curved_buffer(self):
         if not self.brake and self.last_status_straight:
@@ -110,16 +114,17 @@ class Throttle(object):
             self.brake = False
             self.last_status_straight = False
 
-    def get_curved_throttle(self):
+    def get_curved_throttle(self, steer):
+        self.straight_buffer = []
         try:
-            return self.curved_buffer.pop(), self.brake
+            return self.curved_buffer.pop(), self.brake, self.soft_brake_val
         except IndexError:
             self._refill_curved_buffer()
-            return self.curved_buffer.pop(), self.brake
+            return self.curved_buffer.pop(), self.brake, self.soft_brake_val
 
     def get_throttle(self, steer):
-        if abs(steer) >= curve_threshold:
-            return self.get_curved_throttle()
+        if abs(steer) >= self.curve_threshold:
+            return self.get_curved_throttle(steer)
         else:
             return self.get_straight_throttle()
 
@@ -217,19 +222,20 @@ def main(mode='no_latency'):
             steer = manager.model.predict(manager.processor.image)
 
         # Get throttle value
-        throttle, is_brake = manager.throttle.get_throttle(steer)
+        throttle, is_brake, brake_val = manager.throttle.get_throttle(steer)
 
         # Publish joy_data
         joy_data.steer = steer
         if is_brake:
-            joy_data.brake = 0.75
+            joy_data.brake = brake_val
+            joy_data.throttle = 0.0
         else:
             joy_data.throttle = throttle
             joy_data.brake = 0.0
         manager.publish(joy_data)
 
         print('Throttle: {} | Brake {} | Steer: {}'.format(format(round(joy_data.throttle, 2), '.2f'),
-                                                           format(round(joy_data.brake, 2), '.1f'),
+                                                           format(round(joy_data.brake, 2), '.2f'),
                                                            format(round(np.squeeze(joy_data.steer), 3), '.3f')))
         manager.rate.sleep()
 
