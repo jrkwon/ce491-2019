@@ -215,6 +215,7 @@ def main(mode='no_latency'):
     joy_data = Control()
     steer = 0.0  # Initial steering value
 
+    t0 = time.time()
     while not rospy.is_shutdown():
 
         # If processor is ready with image, update steer value
@@ -234,9 +235,13 @@ def main(mode='no_latency'):
             joy_data.brake = 0.0
         manager.publish(joy_data)
 
-        print('Throttle: {} | Brake {} | Steer: {}'.format(format(round(joy_data.throttle, 2), '.2f'),
-                                                           format(round(joy_data.brake, 2), '.2f'),
-                                                           format(round(np.squeeze(joy_data.steer), 3), '.3f')))
+        time_elapsed = round(time.time() - t0, 1)
+        print('Throttle: {} | Brake {} | Time Elapsed: {} | Steer: {}'.format(
+            format(round(joy_data.throttle, 2), '.2f'),
+            format(round(joy_data.brake, 2), '.2f'),
+            time_elapsed,
+            format(round(np.squeeze(joy_data.steer), 3), '.3f')
+        ))
         manager.rate.sleep()
 
 
