@@ -13,7 +13,7 @@ from config import Config
 
 
 def get_fps(latency_ms):
-    return round(1000.0 / latency_ms)
+    return round(1000.0 / latency_ms, 1)
 
 
 class Handler(object):
@@ -37,7 +37,11 @@ if __name__ == '__main__':
     pub = rospy.Publisher('/delayed_img', Image, queue_size=10)
 
     conf = Config().config
-    latency_ms = conf['lc_latency_ms']
+
+    if len(sys.argv) >= 2:
+        latency_ms = int(sys.argv[1])
+    else:
+        latency_ms = conf['lc_latency_ms']
     fps = get_fps(latency_ms)
     print('Latency: {} ms ({} Hz)'.format(latency_ms, fps))
     rate = rospy.Rate(fps)
