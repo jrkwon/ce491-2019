@@ -53,9 +53,28 @@ crop_x1 = gazebo_crop_x1
 crop_x2 = rightside_width_cut
 
 
+class SimpleThrottle(object):
+
+    magnitude = 0.2
+    buffer_size = 400
+    buffer = None
+
+    def __init__(self):
+        print('Using simple throttle with value {}'.format(self.magnitude))
+        self.buffer = [self.magnitude] * self.buffer_size
+
+    def get_throttle(self, steer):
+        try:
+            val = self.buffer.pop()
+        except IndexError:
+            val = 0.0
+
+        return val, False, 0.0
+
+
 class Throttle(object):
     init_steps = 100
-    curve_threshold = 0.115
+    curve_threshold = 0.4   # 0.115
     straight_accl_steps = 80
     straight_neut_steps = 40
     curved_accl_steps = 80
@@ -185,16 +204,16 @@ class Preprocessor(object):
 
 class Manager(object):
 
-    def __init__(self, config_path, weight_path, mode):
+    def __init__(self, config_path, weight_path, latency_mode, throttle_mode):
         self.model = Model(config_path, weight_path)
-        self.throttle = Throttle()
+        self.throttle = SimpleThrottle() if throttle_mode == 'simple' else Throttle()
         self.processor = Preprocessor()
 
         rospy.init_node('run_neural')
-        if mode == 'no_latency':
+        if latency_mode == 'no_latency':
             print('No latency mode.')
             rospy.Subscriber('/bolt/front_camera/image_raw', Image, self._callback, queue_size=1)
-        elif mode == 'latency':
+        elif latency_mode == 'latency':
             print('Latency mode.')
             rospy.Subscriber('/delayed_img', Image, self._callback, queue_size=1)
 
@@ -208,9 +227,9 @@ class Manager(object):
         self.publisher.publish(data)
 
 
-def main(mode='no_latency'):
+def main(latency_mode='no_latency'):
     # Initialize manager with trained model
-    manager = Manager(CONFIG_PATH, WEIGHT_PATH, mode)
+    manager = Manager(CONFIG_PATH, WEIGHT_PATH, latency_mode, throttle_mode='adaptive')
     
     joy_data = Control()
     steer = 0.0  # Initial steering value
