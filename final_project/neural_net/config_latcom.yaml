@@ -42,8 +42,8 @@ image_crop_x2: 800
 image_crop_y2: 590
 
 # Latency compensation parameters
-lc_model: '/home/bimi/bimi/robotics/av/sanjyot/latcom/models/2020-12-21-19-16-01'
-lc_latcom_model: ''
+lc_model: '/home/bimi/bimi/robotics/av/sanjyot/latcom/models/real_time_all_data'
+lc_latcom_model: '/home/bimi/bimi/robotics/av/sanjyot/latcom/models/ts250_full_data'
 
 lc_init_img_height: 210
 lc_init_img_width: 800
