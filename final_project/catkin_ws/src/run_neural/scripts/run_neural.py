@@ -22,6 +22,7 @@ conf = Config().config
 
 # Model path
 model_path = conf['lc_model']
+latcom_model_path = conf['lc_latcom_model']
 init_height = conf['lc_init_img_height']
 init_width = conf['lc_init_img_width']
 fin_height = conf['lc_fin_img_height']
@@ -71,7 +72,7 @@ class SimpleThrottle(object):
 
 class Throttle(object):
     init_steps = 100
-    curve_threshold = 0.4   # 0.115
+    curve_threshold = 0.115   # 0.115
     straight_accl_steps = 80
     straight_neut_steps = 40
     curved_accl_steps = 80
@@ -212,18 +213,19 @@ class Preprocessor(object):
 
 class Manager(object):
 
-    def __init__(self, model_path, latency_mode, throttle_mode):
-        self.model = Model(model_path)
+    def __init__(self, model_path, latcom_model_path, latency_mode, throttle_mode):
         self.throttle = SimpleThrottle() if throttle_mode == 'simple' else Throttle()
         self.processor = Preprocessor()
 
         rospy.init_node('run_neural')
         if latency_mode == 'no_latency':
             print('No latency mode.')
+            self.model = Model(model_path)
             rospy.Subscriber('/bolt/front_camera/image_raw', Image, self._callback, queue_size=1)
         elif latency_mode == 'latency':
             print('Latency mode.')
             rospy.Subscriber('/delayed_img', Image, self._callback, queue_size=1)
+            self.model = Model(latcom_model_path)
 
         self.publisher = rospy.Publisher('/bolt', Control, queue_size=10)
         self.rate = rospy.Rate(ros_rate)
@@ -237,7 +239,7 @@ class Manager(object):
 
 def main(latency_mode='no_latency'):
     # Initialize manager with trained model
-    manager = Manager(model_path, latency_mode, throttle_mode='adaptive')
+    manager = Manager(model_path, latcom_model_path, latency_mode, throttle_mode='adaptive')
     
     joy_data = Control()
     steer = 0.0  # Initial steering value
