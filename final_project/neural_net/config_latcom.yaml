@@ -1,7 +1,7 @@
 ###############################################################################
 # This is default configuration.
 
-version: 0.5 
+version: 0.6
 
 # network defintion
 network_type: 8
