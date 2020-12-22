@@ -4,7 +4,7 @@
 # config file name
 # - If you want to change it, make your own copy like config_<meaningful>.yaml
 # - This config name will be postfixed to the neural network weight file name
-CONFIG_YAML          = 'config_jaerock'   
+CONFIG_YAML          = 'config_latcom'
 
 # network model type
 NET_TYPE_NIKHIL      = 0
