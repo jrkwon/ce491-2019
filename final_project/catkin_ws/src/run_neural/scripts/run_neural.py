@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import threading 
 import cv2
 import time
 import rospy
@@ -12,7 +11,6 @@ import sys
 import os
 
 sys.path.append('../neural_net/')
-os.chdir('../neural_net/')
 
 from image_converter import ImageConverter
 from config import Config
@@ -23,8 +21,7 @@ from keras import losses
 conf = Config().config
 
 # Model path
-CONFIG_PATH = conf['lc_model_config']
-WEIGHT_PATH = conf['lc_model_weight']
+model_path = conf['lc_model']
 init_height = conf['lc_init_img_height']
 init_width = conf['lc_init_img_width']
 fin_height = conf['lc_fin_img_height']
@@ -150,10 +147,20 @@ class Throttle(object):
 
 class Model(object):
 
-    def __init__(self, config_path, weight_path):
-        self.config_path = config_path
-        self.weight_path = weight_path
+    def __init__(self, model_path):
+        self.model_path = model_path
+        self.config_path = os.path.join(self.model_path, 'config.json')
+        self.weight_path = os.path.join(self.model_path, 'weights.h5')
+        self.params_path = os.path.join(self.model_path, 'params.json')
         self.model = self._load()
+
+    def print_params(self):
+        with open(self.params_path) as f:
+            params = f.read()
+
+        print('=== Model parameters ===')
+        print(params)
+        print('========================')
 
     def _load(self):
         with open(self.config_path) as json_file:
@@ -166,6 +173,7 @@ class Model(object):
             optimizer='adam',
             metrics=['mse']
         )
+        self.print_params()
         return model
 
     def predict(self, preprocessed_img):
@@ -204,8 +212,8 @@ class Preprocessor(object):
 
 class Manager(object):
 
-    def __init__(self, config_path, weight_path, latency_mode, throttle_mode):
-        self.model = Model(config_path, weight_path)
+    def __init__(self, model_path, latency_mode, throttle_mode):
+        self.model = Model(model_path)
         self.throttle = SimpleThrottle() if throttle_mode == 'simple' else Throttle()
         self.processor = Preprocessor()
 
@@ -229,7 +237,7 @@ class Manager(object):
 
 def main(latency_mode='no_latency'):
     # Initialize manager with trained model
-    manager = Manager(CONFIG_PATH, WEIGHT_PATH, latency_mode, throttle_mode='adaptive')
+    manager = Manager(model_path, latency_mode, throttle_mode='adaptive')
     
     joy_data = Control()
     steer = 0.0  # Initial steering value
